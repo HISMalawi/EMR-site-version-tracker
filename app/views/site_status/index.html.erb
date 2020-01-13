@@ -1,0 +1,124 @@
+
+<style>
+
+#emr-sites {
+  width: 100%
+}
+
+
+</style>
+
+<!-- Page level plugins -->
+<%= stylesheet_link_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/jquery.dataTables.min' %>
+<%= javascript_include_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/datatables-demo.js' %>
+
+
+<h1>EMR sites</h1>
+<p>PoC and eMastercard site updates
+  <span style="float: right;padding-right: 10px;">
+    <select id="site-name" onchange="fetchData(this.value);">
+      <option>&nbsp;</option>
+    </select>
+  </span>
+</p>
+<hr />
+<span id="assigned_to">&nbsp;</span>
+<br />
+<br />
+
+<table id="emr-sites" class="table table-bordered">
+  <thead>
+    <tr>
+      <th>Application</th>
+      <th>Version number</th>
+      <th>In use</th>
+      <th>Date last used</th>
+      <th>Data cleaning done</th>
+      <th>Comments</th>
+    </tr>
+  </thead>
+</table>
+
+<script>
+
+var emrSite = jQuery('#emr-sites').DataTable( {
+  fixedHeader:    true,
+  data:           null,
+  deferRender:    true
+});
+
+function fetchData(location_id) {
+  $.ajax({
+    method: "GET",
+    url: "/assigned_emr_sites",
+    data: {
+      user_id: null,
+      location_id: location_id
+    }
+  })
+  .done(function( data ) {
+    loadDataTable(data);
+  });
+}
+
+
+function loadDataTable(sites) {
+  var formatted_data = [];
+  emrSite.destroy();
+  var assigned_to = null;
+
+  for(var i = 0; i < sites.length; i++){
+    var app_name = sites[i].application_name;
+    var ver = sites[i].version_number;
+    var app_in_use  = sites[i].app_in_use;
+    var last_date_used = sites[i].last_date_used;
+    var data_cleaning_done = sites[i].data_cleaning_done;
+    var comments = sites[i].comments;
+
+    formatted_data.push([app_name, ver, app_in_use, 
+      last_date_used, data_cleaning_done, comments]);
+    assigned_to = sites[i].email;
+  }  
+
+  emrSite = jQuery('#emr-sites').DataTable({
+    fixedHeader:    true,
+    data:           formatted_data,
+    deferRender:    true
+  });
+
+  if(assigned_to){
+    $('#assigned_to').html("Assigned to: <b>" + assigned_to + "</b>");
+  }else{
+    $('#assigned_to').html(null);
+  }
+
+}
+
+var toggle = document.getElementById("menu-toggle");
+toggle.setAttribute("onclick", "reloadData();");
+
+function reloadData() {
+  //setTimeout ("fetchData();", 100);
+}
+
+function fetchUserSites() {
+  $.ajax({
+    method: "GET",
+    url: "/emr_sites",
+    data: null
+  })
+  .done(function( data ) {
+    var site_name = document.getElementById('site-name');
+    for(var i = 0; i < data.length; i++){
+      var opt = document.createElement('option');
+      opt.setAttribute("value", data[i].location_id);
+      opt.innerHTML = data[i].name;
+      site_name.appendChild(opt);
+    }
+  });
+}
+
+fetchUserSites();
+</script>

@@ -1,0 +1,2 @@
+module SiteStatusHelper
+end

@@ -1,0 +1,110 @@
+<style>
+
+#emr-sites {
+  width: 100%
+}
+
+.checkbox-col {
+  text-align: center;
+}
+
+</style>
+
+<!-- Page level plugins -->
+<%= stylesheet_link_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/jquery.dataTables.min' %>
+<%= javascript_include_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/datatables-demo.js' %>
+
+
+<h1>EMR site(s)</h1>
+<p>PoC and eMastercard site(s) assigned to&nbsp;<%= User.current.email%></p>
+
+<table id="emr-sites" class="table table-bordered">
+  <thead>
+    <tr>
+      <th>District</th>
+      <th>Facility name</th>
+      <th>EMR type</th>
+      <th style="width: 20px; text-align: center;">Assigned</th>
+    </tr>
+  </thead>
+</table>
+
+<script>
+
+var emrSite = jQuery('#emr-sites').DataTable( {
+  fixedHeader:    true,
+  data:           null,
+  deferRender:    true
+});
+
+function fetchData() {
+  $.ajax({
+    method: "GET",
+    url: "/emr_sites",
+    data: null
+  })
+  .done(function( data ) {
+    loadDataTable(data);
+  });
+}
+
+function setSite(e){
+  $.ajax({
+    method: "POST",
+    url: "/assign_site",
+    data: {
+      location_id: e.id.replace("checkbox-",""),
+      assigned: e.checked,
+      user_id: <%=User.current.id%>
+    }
+  })
+  .done(function( data ) {
+    console.log(data);
+  });
+}
+
+function addCheckBox(location_id) {
+  var span = document.createElement('span');
+  var box = document.createElement('input');
+  box.setAttribute("type","checkbox");
+  box.setAttribute("name","name-" + location_id);
+  box.setAttribute("id","checkbox-" + location_id);
+  box.setAttribute("value","value" + location_id);
+  box.setAttribute("onclick","setSite(this);" );
+  span.appendChild(box);
+  return span.innerHTML;
+}
+
+function loadDataTable(sites) {
+  var formatted_data = [];
+  emrSite.destroy();
+
+  for(var i = 0; i < sites.length; i++){
+    var district = sites[i].district;
+    var name = sites[i].name;
+    var emr_type  = sites[i].emr_type;
+    var location_id = sites[i].location_id;
+
+    formatted_data.push([district, name, emr_type, addCheckBox(location_id)]);
+  }  
+
+  emrSite = jQuery('#emr-sites').DataTable({
+    fixedHeader:    true,
+    data:           formatted_data,
+    deferRender:    true,
+    columnDefs: [
+      {"className": "checkbox-col", "targets": 3}
+    ]});
+}
+
+fetchData();
+var toggle = document.getElementById("menu-toggle");
+toggle.setAttribute("onclick", "reloadData();");
+
+function reloadData() {
+  //setTimeout ("fetchData();", 100);
+}
+
+</script>

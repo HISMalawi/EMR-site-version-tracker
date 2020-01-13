@@ -1,0 +1,336 @@
+
+<%= stylesheet_link_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/jquery.dataTables.min' %>
+<%= javascript_include_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/datatables-demo.js' %>
+
+<style>
+
+.main-containers {
+  display: table;
+  width: 100%;
+}
+
+.main-container-rows {
+  display: table-row;
+}
+
+.main-container-cells {
+  display: table-cell;
+  padding: 10px 1px;
+}
+
+.left-main-cell {
+  width: 50%;
+  background-color: lightyellow;
+  border-style: solid;
+  border-width: 0px 1px 0px 0px;
+}
+
+.right-main-cell {
+  text-align: right;
+}
+
+.right-main-cell input, select {
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+  width: 100%;
+  text-align: right;
+  margin-right: 5px;
+}
+
+.alert-success {
+  font-size: 15px;
+  text-align: center;
+}
+
+</style>
+
+
+
+<div class="main-containers" style="width: 100%; padding-top: 15px;">
+  <div class="main-container-rows">
+    
+    <!--div class="main-container-cells left-main-cell">
+      <label>Latest update details</label><br />
+      <div class="main-container-rows">
+        <div class="main-container-cells">Select site name</div>
+        <div class="main-container-cells">
+          <select id="site-name-one" onchange="fetchData(this.value);">
+            <option>&nbsp;</option>
+          </select>
+        </div>
+      </div>
+      <hr />
+      <table id="latest-update" class="table table-bordered">
+        <thead>
+          <th>App</th>
+          <th>Version</th>
+          <th>App in use</th>
+        </thead>
+      </table>
+    </div-->
+
+    <div class="main-container-cells right-main-cell">
+        <div class="main-containers">
+          
+          <div class="main-container-rows">
+            <div class="main-container-cells">&nbsp;</div>
+            <div class="main-container-cells">
+              <div class="alert alert-success" id="alert-update" role="alert" style="display: none;">
+                Update successful ...
+              </div>
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells">Select site name</div>
+            <div class="main-container-cells">
+              <select id="site-name-two">
+                <option>&nbsp;</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells">Application name</div>
+            <div class="main-container-cells">
+              <select id="application-name">
+                <option>&nbsp;</option>
+                <option value="eMastercard">eMastercard</option>
+                <option value="BHT-EMR-API">BHT-EMR-API</option>
+                <option value="BHT-Core">BHT-Core</option>
+                <option value="ART">BHT-APP-ART</option>
+                <option value="ANC">BHT-APP-ANC</option>
+                <option value="OPD">BHT-APP-OPD</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="main-container-rows">
+            <div class="main-container-cells">Application version</div>
+            <div class="main-container-cells">
+              <input type="text" name="version-number" id="version-number" />
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells">Is the application in use?</div>
+            <div class="main-container-cells">
+              <select id="is-the-app-in-use">
+                <option>&nbsp;</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="main-container-rows">
+            <div class="main-container-cells">Estimated last date used</div>
+            <div class="main-container-cells">
+              <input type="text" name="version-number" id="update-date" onkeydown="return false"/>
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells">Data up-to-date?</div>
+            <div class="main-container-cells">
+              <select id="data-up-to-date">
+                <option>&nbsp;</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells">Data cleaning done?</div>
+            <div class="main-container-cells">
+              <select id="data-cleaned">
+                <option>&nbsp;</option>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+              </select>
+            </div>
+          </div>
+          
+          <div class="main-container-rows">
+            <div class="main-container-cells" style="vertical-align:top">Comment(s)</div>
+            <div class="main-container-cells">
+              <textarea name="comments" id="comments" cols="30" rows="5"></textarea>
+            </div>
+          </div>
+
+          <div class="main-container-rows">
+            <div class="main-container-cells" style="text-align: right !important;">
+            &nbsp;
+            </div>
+            <div class="main-container-cells" style="text-align: right !important;">
+              <button class="btn btn-success" onclick="updateStatus();">Update</button>
+            </div>
+          </div>
+
+          
+
+        </div>
+
+    </div>
+
+  </div>
+</div>
+
+<%= stylesheet_link_tag 'datepicker/datepicker3.min' %>
+<%= javascript_include_tag 'datepicker/datepicker.min' %>
+<%= javascript_include_tag 'datepicker/moment' %>
+
+<script>
+
+function fetchUserSites() {
+  $.ajax({
+    method: "GET",
+    url: "/emr_assigned_sites",
+    data: {user_id: <%=User.current.id%>}
+  })
+  .done(function( data ) {
+    //var site_name = document.getElementById('site-name-one');
+    var site_name2 = document.getElementById('site-name-two');
+    for(var i = 0; i < data.length; i++){
+      var opt = document.createElement('option');
+      opt.setAttribute("value", data[i].location_id);
+      opt.innerHTML = data[i].location_name;
+      site_name2.appendChild(opt);
+    }
+    //site_name2.innerHTML = site_name.innerHTML;
+  });
+}
+
+
+function loadDataTable(sites) {
+}
+
+fetchUserSites();
+
+function clearForm() {
+  $("#site-name-two").val(null);
+  $("#version-number").val(null);
+  $("#is-the-app-in-use").val(null);
+  $("#update-date").val(null);
+  $("#data-up-to-date").val(null);
+  $("#data-cleaned").val(null);
+  $("#comments").val(null);
+  $("#application-name").val(null);
+}
+
+function updateStatus() {
+  location_id = $("#site-name-two").val();
+  version_num = $("#version-number").val();
+  app_in_use = $("#is-the-app-in-use").val();
+  updated_date = $("#update-date").val();
+  data_up_to_date = $("#data-up-to-date").val();
+  data_cleaned = $("#data-cleaned").val();
+  comments = $("#comments").val();
+  application_name = $("#application-name").val();
+
+  if(location_id.length < 1)
+    return;
+
+  if(isStringEmpty(version_num))
+    return;
+
+  if(isStringEmpty(updated_date))
+    return;
+
+  if(isStringEmpty(data_cleaned))
+    return;
+  
+  if(isStringEmpty(data_up_to_date))
+    return;
+
+  if(isStringEmpty(app_in_use))
+    return;
+
+
+  $.ajax({
+    method: "POST",
+    url: "/update_assigned_sites",
+    data: {
+      location_id: location_id,
+      version_number: version_num,
+      application_being_used: app_in_use,
+      updated_date: moment(updated_date).format("YYYY-MM-DD"),
+      data_up_to_date: data_up_to_date,
+      data_cleaned: data_cleaned,
+      comments: comments,
+      application_name: application_name,
+      user_id: "<%= User.current.id %>"
+    }
+  })
+  .done(function( data ) {
+    var al = document.getElementById('alert-update');
+    al.style="display: block;";
+    clearForm();
+    setTimeout(function(){ al.style = "display: none;"; }, 3000);
+  });
+
+}
+
+function isStringEmpty(str) {
+  try {
+    return (str.replace(/\s+/g, '').length < 1);
+  } catch (e) {
+    return true;
+  }
+}
+
+var emrSite = jQuery('#latest-update').DataTable( {
+  fixedHeader:    true,
+  data:           null,
+  deferRender:    true,
+  searching:      false
+});
+
+function fetchData(location_id) {
+  console.log(location_id)
+  if(location_id.length < 1)
+    return;
+
+  $.ajax({
+    method: "GET",
+    url: "/assigned_emr_sites",
+    data: {
+      user_id: <%= User.current.id%>,
+      location_id: location_id
+    }
+  })
+  .done(function( data ) {
+    loadDataTable(data);
+  });
+
+}
+
+function loadDataTable(sites) {
+  var formatted_data = [];
+  emrSite.destroy();
+
+  for(var i = 0; i < sites.length; i++){
+    var app_name = sites[i].application_name;
+    var ver = sites[i].version_number;
+    var app_in_use  = sites[i].app_in_use;
+
+    formatted_data.push([app_name, ver, app_in_use]);
+  }  
+
+  emrSite = jQuery('#latest-update').DataTable({
+    fixedHeader:    true,
+    data:           formatted_data,
+    deferRender:    true
+  });
+}
+
+$('#update-date').datepicker({
+    endDate: "<%= Date.today.strftime('%dd/%m/%Y)",
+    format: "dd/M/yyyy"
+});
+
+
+</script>

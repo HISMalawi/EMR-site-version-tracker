@@ -1,0 +1,77 @@
+<style>
+
+#emr-sites {
+  width: 100%
+}
+
+
+</style>
+
+<!-- Page level plugins -->
+<%= stylesheet_link_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/jquery.dataTables.min' %>
+<%= javascript_include_tag 'datatables/dataTables.bootstrap4.min' %>
+<%= javascript_include_tag 'datatables/datatables-demo.js' %>
+
+
+<h1>EMR sites</h1>
+<p>List contains both PoC and eMastercard sites</p>
+
+<table id="emr-sites" class="table table-bordered">
+  <thead>
+    <tr>
+      <th>District</th>
+      <th>Facility name</th>
+      <th>EMR type</th>
+    </tr>
+  </thead>
+</table>
+
+<script>
+
+var emrSite = jQuery('#emr-sites').DataTable( {
+  fixedHeader:    true,
+  data:           null,
+  deferRender:    true
+});
+
+function fetchData() {
+  $.ajax({
+    method: "GET",
+    url: "/emr_sites",
+    data: null
+  })
+  .done(function( data ) {
+    loadDataTable(data);
+  });
+}
+
+
+function loadDataTable(sites) {
+  var formatted_data = [];
+  emrSite.destroy();
+
+  for(var i = 0; i < sites.length; i++){
+    var district = sites[i].district;
+    var name = sites[i].name;
+    var emr_type  = sites[i].emr_type;
+
+    formatted_data.push([district, name, emr_type]);
+  }  
+
+  emrSite = jQuery('#emr-sites').DataTable({
+    fixedHeader:    true,
+    data:           formatted_data,
+    deferRender:    true
+  });
+}
+
+fetchData();
+var toggle = document.getElementById("menu-toggle");
+toggle.setAttribute("onclick", "reloadData();");
+
+function reloadData() {
+  //setTimeout ("fetchData();", 100);
+}
+
+</script>
